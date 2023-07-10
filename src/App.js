@@ -1,8 +1,8 @@
 import { Route, Routes } from "react-router-dom";
-
 import Login from "./components/auth/Login";
 import SignUp from "./components/auth/SignUp";
-import SupplyData from "./components/SupplyData";
+import Resource from "./components/Resource";
+import { ToastContainer } from "react-toastify";
 
 function App() {
   return (
@@ -11,8 +11,9 @@ function App() {
         <Route path="/" exact element={<Login />} />
         <Route path="/sign-in" exact element={<Login />} />
         <Route path="/sign-up" exact element={<SignUp />} />
-        <Route path="/supply-data" exact element={<SupplyData />} />
+        <Route path="/resource" exact element={<Resource />} />
       </Routes>
+      <ToastContainer />
     </div>
   );
 }

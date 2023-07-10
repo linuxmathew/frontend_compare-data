@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./Login.css";
-import { Link, redirect } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   MDBBtn,
   MDBContainer,
@@ -15,30 +15,45 @@ import {
 } from "mdb-react-ui-kit";
 import sideImg from "../../images/img1.webp";
 import { auth } from "../../firebase";
-import { signInWithRedirect } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { successToastMessage } from "../utilities/ShowToastInfo";
+// import { successToastMessage } from "../utilities/ShowToastInfo";
 
 function Login() {
-  const [userData, setUserData] = useState({ username: "", password: "" });
+  const navigate = useNavigate();
+  const [userData, setUserData] = useState({ email: "", password: "" });
   const [error, setError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const { email, password } = userData;
+
+  const onInputChange = (e) => {
+    setUserData({ ...userData, [e.target.name]: e.target.value });
+    setError(false);
+  };
 
   const logIn = async (e) => {
     e.preventDefault();
     try {
-      const response = await signInWithRedirect(
-        auth,
-        userData.username,
-        userData.password
-      );
+      setIsLoading(true);
+      const response = await signInWithEmailAndPassword(auth, email, password);
 
       console.log(response);
-      setIsLoading(true);
       // on successful log-in- direct to resource
-      redirect("supply-data");
-      console.log("userdata", userData);
+      setIsLoading(false);
+      navigate("/resource");
+      successToastMessage({ message: "Login successful" });
+      console.log("response", response);
     } catch (err) {
-      isLoading(false);
+      setIsLoading(false);
+      console.log(err.message);
+      setErrorMessage(err.message);
       setError(true);
+      if (err.message === "Firebase: Error (auth/user-not-found).") {
+        setErrorMessage("Invalid credential");
+        setError(true);
+      }
     }
   };
 
@@ -75,50 +90,36 @@ function Login() {
                 {error && (
                   <p className="small text-danger">
                     {/* replace with info coming from backend based on status */}
-                    username or password incorrect
+                    {errorMessage}
                   </p>
                 )}
 
                 <MDBInput
                   wrapperClass="mb-4"
-                  label="username"
+                  label="email"
                   id="formControlLg"
-                  type="username"
+                  type="email"
+                  name="email"
                   size="lg"
-                  value={userData.username}
-                  onChange={(e) => {
-                    let text = e.target.value;
-                    let info = { ...userData };
-                    let name = info.username;
-                    name = text;
-                    info.username = name;
-                    setUserData(info);
-                  }}
+                  value={email}
+                  onChange={onInputChange}
                 />
                 <MDBInput
                   wrapperClass="mb-4"
                   label="password"
                   id="formControlLg"
                   type="password"
+                  name="password"
                   size="lg"
-                  value={userData.password}
-                  onChange={(e) => {
-                    let text = e.target.value;
-                    let info = { ...userData };
-                    let pass = info.password;
-                    pass = text;
-                    info.password = pass;
-                    setUserData(info);
-                  }}
+                  value={password}
+                  onChange={onInputChange}
                 />
                 <MDBBtn
                   className="mb-4 px-5"
                   color="dark"
                   size="lg"
                   onClick={logIn}
-                  disabled={
-                    userData.password === "" || userData.username === ""
-                  }
+                  disabled={userData.password === "" || userData.email === ""}
                 >
                   {isLoading ? <MDBSpinner /> : "Login"}
                 </MDBBtn>
