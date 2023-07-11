@@ -227,12 +227,12 @@ function Resource() {
                               </td>
                               <td>
                                 <p className="fw-normal mb-1">
-                                  {currentUser && currentUser.noOfCompanies}
+                                  {currentUser && currentUser.noofcompanies}
                                 </p>
                               </td>
                               <td>
                                 <p className="fw-normal mb-1">
-                                  {currentUser && currentUser.productPerCompany}
+                                  {currentUser && currentUser.productpercompany}
                                 </p>
                               </td>
                             </tr>
@@ -304,12 +304,12 @@ function Resource() {
                               </td>
                               <td>
                                 <p className="fw-normal mb-1">
-                                  {val.noOfCompanies}
+                                  {val.noofcompanies}
                                 </p>
                               </td>
                               <td>
                                 <p className="fw-normal mb-1">
-                                  {val.productPerCompany}
+                                  {val.productpercompany}
                                 </p>
                               </td>
                             </tr>
