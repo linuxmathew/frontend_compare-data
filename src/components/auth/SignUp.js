@@ -60,7 +60,7 @@ function SignUp() {
         names: names,
         email: email,
         username: username,
-        uid: user.uid,
+        userId: user.uid,
       });
       // on successful log-in- redirect to resource
       console.log("response", response);

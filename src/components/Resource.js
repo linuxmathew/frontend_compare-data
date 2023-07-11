@@ -17,20 +17,24 @@ import {
   MDBSpinner,
 } from "mdb-react-ui-kit";
 import AxiosInstance from "./auth/Auth";
+import { successToastMessage } from "./utilities/ShowToastInfo";
 
 function Resource() {
   const [compareData, setCompareData] = useState(false);
   const [allData, setAllData] = useState([]);
+  const [isEmpty, setIsEmpty] = useState(false);
   const [viewUsers, setViewUsers] = useState(true);
   const [userIndex, setUserIndex] = useState(0);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [userId, setUserId] = useState("");
   const [singleView, setSingleView] = useState(false);
   const [currentUser, setCurrentUser] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [token, setToken] = useState("");
   const [userDetails, setUserDetails] = useState(null);
   const [companyData, setCompanyData] = useState({
-    noOfCompany: "",
-    productPerCompany: "",
+    noOfCompany: 0,
+    productPerCompany: 0,
   });
 
   const { noOfCompany, productPerCompany } = companyData;
@@ -45,6 +49,7 @@ function Resource() {
     const listen = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserDetails(user);
+        setUserId(user.uid);
         console.log(user);
 
         // get Id token
@@ -77,10 +82,24 @@ function Resource() {
   };
 
   const sendCompanyData = async () => {
+    const data = { ...companyData, userId: userId };
+    console.log("data", data);
     try {
-      // const response = await AxiosInstance.post('/', {headers:})
-      console.log("userdata", userDetails);
-    } catch (err) {}
+      const response = await AxiosInstance.put(
+        `/api/users/:userId/companies`,
+        data,
+        {
+          headers: { Authorization: "Bearer " + token },
+        }
+      );
+      console.log("userdata", response);
+      if (response.status === 200) {
+        successToastMessage({ message: "inputs saved successfully" });
+        setSaveSuccess(true);
+      }
+    } catch (err) {
+      console.log("error", err);
+    }
   };
 
   const fetchUsers = async () => {
@@ -91,6 +110,7 @@ function Resource() {
       });
       console.log(users.data.obj);
       let data = users.data.obj;
+      data.length < 1 ? setIsEmpty(true) : setIsEmpty(false);
       setAllData(data);
       setViewUsers(false);
       setSingleView(true);
@@ -101,8 +121,8 @@ function Resource() {
     }
   };
 
-  const isLastUser = userIndex === allData && allData.length - 1;
   const isFirstUser = userIndex === 0;
+  const isLastUser = userIndex === allData.length - 1 || allData.length === 0;
 
   return (
     <body className="myBody py-3">
@@ -116,130 +136,142 @@ function Resource() {
             </div>
             {userDetails && userDetails.email !== "temfoden@gmail.com" ? (
               <>
-                <h5
-                  className="fw-normal my-4 pb-3"
-                  style={{ letterSpacing: "1px" }}
-                >
-                  Kindly fill the below fields and hit submit
-                </h5>
-
-                <MDBRow>
-                  <MDBCol md="6">
-                    <MDBInput
-                      wrapperClass="mb-4"
-                      label="No of Companies"
-                      id="formControlLg"
-                      type="number"
-                      size="lg"
-                      min="0"
-                      name="noOfCompany"
-                      value={noOfCompany}
-                      onChange={onInputChange}
-                    />
-                  </MDBCol>
-                  <MDBCol md="6">
-                    <MDBInput
-                      wrapperClass="mb-4"
-                      label="No of Products per Company"
-                      id="formControlLg"
-                      type="number"
-                      size="lg"
-                      name="productPerCompany"
-                      min="0"
-                      value={productPerCompany}
-                      onChange={onInputChange}
-                    />
-                  </MDBCol>
-                </MDBRow>
-
-                <MDBBtn
-                  className="mb-4 px-5"
-                  color="dark"
-                  size="lg"
-                  onClick={sendCompanyData}
-                  disabled={noOfCompany === "" || productPerCompany === ""}
-                >
-                  submit
-                </MDBBtn>
-              </>
-            ) : (
-              <>
-                {singleView && (
+                {saveSuccess ? (
+                  <h6>informations saved successfully</h6>
+                ) : (
                   <>
                     <h5
                       className="fw-normal my-4 pb-3"
                       style={{ letterSpacing: "1px" }}
                     >
-                      Each user is shown below, click next to view others
+                      Kindly fill the below fields and hit submit
                     </h5>
-                    <MDBTable align="middle">
-                      <MDBTableHead>
-                        <tr>
-                          <th scope="col">Names</th>
-                          <th scope="col">Username</th>
-                          <th scope="col"> No of Companies</th>
-                          <th scope="col">Products by Company</th>
-                        </tr>
-                      </MDBTableHead>
-                      <MDBTableBody>
-                        <tr>
-                          <td>
-                            <p className="fw-normal mb-1">
-                              {currentUser && currentUser.names}
-                            </p>
-                          </td>
-                          <td>
-                            <p className="fw-normal mb-1">
-                              {" "}
-                              {currentUser && currentUser.username}
-                            </p>
-                          </td>
-                          <td>
-                            <p className="fw-normal mb-1">
-                              {currentUser && currentUser.noOfCompanies}
-                            </p>
-                          </td>
-                          <td>
-                            <p className="fw-normal mb-1">
-                              {currentUser && currentUser.productPerCompany}
-                            </p>
-                          </td>
-                        </tr>
-                      </MDBTableBody>
-                    </MDBTable>
 
-                    <MDBRow className="g-3 mb-3">
-                      <MDBCol className="col-6">
-                        <MDBBtn
-                          color="dark"
+                    <MDBRow>
+                      <MDBCol md="6">
+                        <MDBInput
+                          wrapperClass="mb-4"
+                          label="No of Companies"
+                          id="formControlLg"
+                          type="number"
                           size="lg"
-                          onClick={() => {
-                            setCurrentUser(allData[userIndex - 1]);
-                            setUserIndex(userIndex - 1);
-                          }}
-                          disabled={isFirstUser}
-                        >
-                          prev
-                        </MDBBtn>
+                          min="0"
+                          name="noOfCompany"
+                          value={noOfCompany}
+                          onChange={onInputChange}
+                        />
                       </MDBCol>
-                      <MDBCol className="col-6">
-                        <MDBBtn
-                          color="dark"
+                      <MDBCol md="6">
+                        <MDBInput
+                          wrapperClass="mb-4"
+                          label="No of Products per Company"
+                          id="formControlLg"
+                          type="number"
                           size="lg"
-                          onClick={() => {
-                            setCurrentUser(
-                              allData && allData.length > 0
-                                ? allData[userIndex + 1]
-                                : null
-                            );
-                            setUserIndex(userIndex + 1);
-                          }}
-                          disabled={isLastUser}
-                        >
-                          Next
-                        </MDBBtn>
+                          name="productPerCompany"
+                          min="0"
+                          value={productPerCompany}
+                          onChange={onInputChange}
+                        />
                       </MDBCol>
                     </MDBRow>
+
+                    <MDBBtn
+                      className="mb-4 px-5"
+                      color="dark"
+                      size="lg"
+                      onClick={sendCompanyData}
+                      disabled={noOfCompany === "" || productPerCompany === ""}
+                    >
+                      submit
+                    </MDBBtn>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                {singleView && (
+                  <>
+                    {isEmpty ? (
+                      <h6> No user Record found. Please check back later</h6>
+                    ) : (
+                      <>
+                        <h5
+                          className="fw-normal my-4 pb-3"
+                          style={{ letterSpacing: "1px" }}
+                        >
+                          Each user is shown below, click next to view others
+                        </h5>
+                        <MDBTable align="middle">
+                          <MDBTableHead>
+                            <tr>
+                              <th scope="col">Names</th>
+                              <th scope="col">Username</th>
+                              <th scope="col"> No of Companies</th>
+                              <th scope="col">Products by Company</th>
+                            </tr>
+                          </MDBTableHead>
+                          <MDBTableBody>
+                            <tr>
+                              <td>
+                                <p className="fw-normal mb-1">
+                                  {currentUser && currentUser.names}
+                                </p>
+                              </td>
+                              <td>
+                                <p className="fw-normal mb-1">
+                                  {" "}
+                                  {currentUser && currentUser.username}
+                                </p>
+                              </td>
+                              <td>
+                                <p className="fw-normal mb-1">
+                                  {currentUser && currentUser.noOfCompanies}
+                                </p>
+                              </td>
+                              <td>
+                                <p className="fw-normal mb-1">
+                                  {currentUser && currentUser.productPerCompany}
+                                </p>
+                              </td>
+                            </tr>
+                          </MDBTableBody>
+                        </MDBTable>
+
+                        <MDBRow className="g-3 mb-3">
+                          <MDBCol className="col-6">
+                            <MDBBtn
+                              color="dark"
+                              size="lg"
+                              onClick={() => {
+                                setCurrentUser(allData[userIndex - 1]);
+                                setUserIndex(userIndex - 1);
+                              }}
+                              disabled={isFirstUser}
+                            >
+                              prev
+                            </MDBBtn>
+                          </MDBCol>
+                          <MDBCol className="col-6">
+                            <MDBBtn
+                              color="dark"
+                              size="lg"
+                              onClick={() => {
+                                setCurrentUser(
+                                  allData && allData.length > 0
+                                    ? allData[userIndex + 1]
+                                    : null
+                                );
+                                setUserIndex(userIndex + 1);
+                              }}
+                              disabled={isLastUser}
+                            >
+                              Next
+                            </MDBBtn>
+                          </MDBCol>
+                        </MDBRow>
+                      </>
+                    )}
                   </>
                 )}
                 {compareData && (
