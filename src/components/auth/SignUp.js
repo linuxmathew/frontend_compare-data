@@ -56,14 +56,14 @@ function SignUp() {
       console.log("response", user);
 
       // add addition reg info to db
-      // const response = await AxiosInstance.post("/api/register", {
-      //   names,
-      //   email,
-      //   username,
-      //   userId: user.uid,
-      // });
+      const response = await AxiosInstance.post("/api/register", {
+        names: names,
+        email: email,
+        username: username,
+        uid: user.uid,
+      });
       // on successful log-in- redirect to resource
-
+      console.log("response", response);
       setIsLoading(false);
       successToastMessage({ message: "Registration successful" });
       navigate("/sign-in");

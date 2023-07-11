@@ -14,10 +14,19 @@ import {
   MDBTable,
   MDBTableHead,
   MDBTableBody,
+  MDBSpinner,
 } from "mdb-react-ui-kit";
+import AxiosInstance from "./auth/Auth";
 
 function Resource() {
   const [compareData, setCompareData] = useState(false);
+  const [allData, setAllData] = useState([]);
+  const [viewUsers, setViewUsers] = useState(true);
+  const [userIndex, setUserIndex] = useState(0);
+  const [singleView, setSingleView] = useState(false);
+  const [currentUser, setCurrentUser] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [token, setToken] = useState("");
   const [userDetails, setUserDetails] = useState(null);
   const [companyData, setCompanyData] = useState({
     noOfCompany: "",
@@ -33,9 +42,18 @@ function Resource() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const listen = onAuthStateChanged(auth, (user) => {
+    const listen = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserDetails(user);
+        console.log(user);
+
+        // get Id token
+        try {
+          const idToken = await user.getIdToken();
+          setToken(idToken);
+        } catch (error) {
+          console.log("Error retrieving Id token");
+        }
       } else {
         setUserDetails(null);
         setCompanyData(false);
@@ -46,7 +64,7 @@ function Resource() {
     return () => {
       listen();
     };
-  }, [navigate]);
+  }, [navigate, token]);
 
   const userSignOut = async () => {
     try {
@@ -58,38 +76,33 @@ function Resource() {
     }
   };
 
-  let obj = [
-    {
-      names: "Mathew",
-      email: "darhoja@gmail.com",
-      username: "linux23",
-      password: "Oladele19",
-      noOfCompanies: 22,
-      productPerCompany: 5,
-    },
-    {
-      names: "Temitayo",
-      email: "linuxmathew1245@gmail.com",
-      username: "linux24",
-      password: "Oladele19#",
-      noOfCompanies: 5,
-      productPerCompany: 2,
-    },
-    {
-      names: "Afolabi",
-      email: "temfoden@gmail.com",
-      username: "linux25",
-      password: "Oladele19#",
-      noOfCompanies: 11,
-      productPerCompany: 7,
-    },
-  ];
-
-  const sendCompanyData = () => {
+  const sendCompanyData = async () => {
     try {
+      // const response = await AxiosInstance.post('/', {headers:})
       console.log("userdata", userDetails);
     } catch (err) {}
   };
+
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      const users = await AxiosInstance.get("/api/users", {
+        headers: { Authorization: "Bearer " + token },
+      });
+      console.log(users.data.obj);
+      let data = users.data.obj;
+      setAllData(data);
+      setViewUsers(false);
+      setSingleView(true);
+      setCurrentUser(data[userIndex]);
+    } catch (err) {
+      setIsLoading(false);
+      console.log(err);
+    }
+  };
+
+  const isLastUser = userIndex === allData && allData.length - 1;
+  const isFirstUser = userIndex === 0;
 
   return (
     <body className="myBody py-3">
@@ -151,16 +164,14 @@ function Resource() {
               </>
             ) : (
               <>
-                <h5
-                  className="fw-normal my-4 pb-3"
-                  style={{ letterSpacing: "1px" }}
-                >
-                  View and compare the users' inputs by clicking the below
-                  buttons
-                </h5>
-
-                {companyData && (
-                  <div>
+                {singleView && (
+                  <>
+                    <h5
+                      className="fw-normal my-4 pb-3"
+                      style={{ letterSpacing: "1px" }}
+                    >
+                      Each user is shown below, click next to view others
+                    </h5>
                     <MDBTable align="middle">
                       <MDBTableHead>
                         <tr>
@@ -171,44 +182,133 @@ function Resource() {
                         </tr>
                       </MDBTableHead>
                       <MDBTableBody>
-                        {obj.map((val) => (
-                          <tr>
-                            <td>
-                              <p className="fw-normal mb-1">{val.names}</p>
-                            </td>
-                            <td>
-                              <p className="fw-normal mb-1">{val.username}</p>
-                            </td>
-                            <td>
-                              <p className="fw-normal mb-1">
-                                {val.noOfCompanies}
-                              </p>
-                            </td>
-                            <td>
-                              <p className="fw-normal mb-1">
-                                {val.productPerCompany}
-                              </p>
-                            </td>
-                          </tr>
-                        ))}
+                        <tr>
+                          <td>
+                            <p className="fw-normal mb-1">
+                              {currentUser && currentUser.names}
+                            </p>
+                          </td>
+                          <td>
+                            <p className="fw-normal mb-1">
+                              {" "}
+                              {currentUser && currentUser.username}
+                            </p>
+                          </td>
+                          <td>
+                            <p className="fw-normal mb-1">
+                              {currentUser && currentUser.noOfCompanies}
+                            </p>
+                          </td>
+                          <td>
+                            <p className="fw-normal mb-1">
+                              {currentUser && currentUser.productPerCompany}
+                            </p>
+                          </td>
+                        </tr>
+                      </MDBTableBody>
+                    </MDBTable>
+
+                    <MDBRow className="g-3 mb-3">
+                      <MDBCol className="col-6">
+                        <MDBBtn
+                          color="dark"
+                          size="lg"
+                          onClick={() => {
+                            setCurrentUser(allData[userIndex - 1]);
+                            setUserIndex(userIndex - 1);
+                          }}
+                          disabled={isFirstUser}
+                        >
+                          prev
+                        </MDBBtn>
+                      </MDBCol>
+                      <MDBCol className="col-6">
+                        <MDBBtn
+                          color="dark"
+                          size="lg"
+                          onClick={() => {
+                            setCurrentUser(
+                              allData && allData.length > 0
+                                ? allData[userIndex + 1]
+                                : null
+                            );
+                            setUserIndex(userIndex + 1);
+                          }}
+                          disabled={isLastUser}
+                        >
+                          Next
+                        </MDBBtn>
+                      </MDBCol>
+                    </MDBRow>
+                  </>
+                )}
+                {compareData && (
+                  <div>
+                    <h5
+                      className="fw-normal my-4 pb-3"
+                      style={{ letterSpacing: "1px" }}
+                    >
+                      Summary of all Users information
+                    </h5>
+                    <MDBTable align="middle">
+                      <MDBTableHead>
+                        <tr>
+                          <th scope="col">Names</th>
+                          <th scope="col">Username</th>
+                          <th scope="col"> No of Companies</th>
+                          <th scope="col">Products by Company</th>
+                        </tr>
+                      </MDBTableHead>
+                      <MDBTableBody>
+                        {allData &&
+                          allData.map((val, index) => (
+                            <tr key={index}>
+                              <td>
+                                <p className="fw-normal mb-1">{val.names}</p>
+                              </td>
+                              <td>
+                                <p className="fw-normal mb-1">{val.username}</p>
+                              </td>
+                              <td>
+                                <p className="fw-normal mb-1">
+                                  {val.noOfCompanies}
+                                </p>
+                              </td>
+                              <td>
+                                <p className="fw-normal mb-1">
+                                  {val.productPerCompany}
+                                </p>
+                              </td>
+                            </tr>
+                          ))}
                       </MDBTableBody>
                     </MDBTable>
                   </div>
                 )}
-
-                {!compareData && (
+                {viewUsers ? (
                   <MDBBtn
                     className="mb-4 px-5"
                     color="dark"
                     size="lg"
-                    onClick={() => {
-                      console.log(companyData);
-                      setCompareData(true);
-                    }}
-                    // disabled={noOfCompany === "" || productPerCompany === ""}
+                    onClick={fetchUsers}
                   >
-                    Compare
+                    {isLoading ? <MDBSpinner /> : "view users"}
                   </MDBBtn>
+                ) : (
+                  !compareData && (
+                    <MDBBtn
+                      className="mb-4 px-5"
+                      color="dark"
+                      size="lg"
+                      onClick={() => {
+                        setCompareData(true);
+                        setSingleView(false);
+                      }}
+                      // disabled={noOfCompany === "" || productPerCompany === ""}
+                    >
+                      Compare
+                    </MDBBtn>
+                  )
                 )}
               </>
             )}
