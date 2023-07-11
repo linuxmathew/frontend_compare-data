@@ -50,7 +50,7 @@ function Resource() {
       if (user) {
         setUserDetails(user);
         setUserId(user.uid);
-        console.log(user);
+        // console.log(user);
 
         // get Id token
         try {
@@ -76,6 +76,7 @@ function Resource() {
       const response = signOut(auth);
       console.log("signout success", response);
       navigate("/sign-in");
+      successToastMessage({ message: "Signed out successfully, see you soon" });
     } catch {
       console.log("unable to signout");
     }
