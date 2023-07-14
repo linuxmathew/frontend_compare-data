@@ -206,6 +206,7 @@ function Resource() {
                         <MDBTable align="middle">
                           <MDBTableHead>
                             <tr>
+                              <th scope="col">#</th>
                               <th scope="col">Names</th>
                               <th scope="col">Username</th>
                               <th scope="col"> No of Companies</th>
@@ -214,6 +215,11 @@ function Resource() {
                           </MDBTableHead>
                           <MDBTableBody>
                             <tr>
+                              <td>
+                                <p className="fw-normal mb-1">
+                                  {userIndex + 1}
+                                </p>
+                              </td>
                               <td>
                                 <p className="fw-normal mb-1">
                                   {currentUser && currentUser.names}
@@ -286,6 +292,7 @@ function Resource() {
                     <MDBTable align="middle">
                       <MDBTableHead>
                         <tr>
+                          <th scope="col">#</th>
                           <th scope="col">Names</th>
                           <th scope="col">Username</th>
                           <th scope="col"> No of Companies</th>
@@ -296,6 +303,9 @@ function Resource() {
                         {allData &&
                           allData.map((val, index) => (
                             <tr key={index}>
+                              <td>
+                                <p className="fw-normal mb-1">{index + 1}</p>
+                              </td>
                               <td>
                                 <p className="fw-normal mb-1">{val.names}</p>
                               </td>
